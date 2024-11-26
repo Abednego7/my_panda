@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  Home
+{% endblock %}
+
+{% block content %}
+  <div class="container">
+    <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+      <h1 class="text-center mb-4">Hi, let's work together with Pandas</h1>
+      <form action="/" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary w-100 mt-3">Send</button>
+      </form>
+    </div>
+
+    {% if dataframe %}
+      <h2 class="text-center mt-5">{{ name|title }}, this is the content of the file 📊:</h2>
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered mx-auto" style="max-width: 90%;">
+          <thead>
+            <tr>
+              {% for col in dataframe.columns %}
+                <th>{{ col }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in dataframe.values %}
+              <tr>
+                {% for cell in row %}
+                  <td>{{ cell }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <h2 class="text-center mt-5">Details 🔍:</h2>
+  <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+    <p>
+      <strong>Record Count:</strong>
+    </p>
+    <ol>
+      {% for key, count in dataframe.total_rows.items %}
+        <li>
+          {{ key }}: {{ count }} <strong>non-null</strong>
+        </li>
+      {% endfor %}
+    </ol>
+  </div>
+{% endblock %}
