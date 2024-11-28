@@ -43,19 +43,48 @@
         </table>
       </div>
     {% endif %}
-  </div>
 
-  <h2 class="text-center mt-5">Details 🔍:</h2>
-  <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
-    <p>
-      <strong>Record Count:</strong>
+    <h2 class="text-center mt-5">Details 🔍:</h2>
+    <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+      <p>
+        <strong>Record Count:</strong>
+      </p>
+      <ol>
+        {% for key, count in dataframe.total_rows.items %}
+          <li>
+            {{ key }}: {{ count }} <strong>non-null</strong>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+
+    <h2 class="text-center mt-5">General statistics 📊:</h2>
+    <p class="text-center">
+      <strong>Numerical columns found:</strong>
     </p>
-    <ol>
-      {% for key, count in dataframe.total_rows.items %}
-        <li>
-          {{ key }}: {{ count }} <strong>non-null</strong>
-        </li>
-      {% endfor %}
-    </ol>
+    <div class="table-responsive mt-3">
+      <table class="table table-bordered mx-auto" style="max-width: 90%;">
+        <thead>
+          <tr>
+            <th>Operations</th>
+            {% for key in general_statistics %}
+              <th>{{ key }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for key, val in describe_info.items %}
+            <tr>
+              <td>
+                <strong>{{ key }}</strong>
+              </td>
+              {% for v in val %}
+                <td>{{ v }}</td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 {% endblock %}
