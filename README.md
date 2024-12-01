@@ -50,5 +50,5 @@ Quise crear un proyecto que me permitiera seguir aprendiendo, enfrentándome a n
 ---
 
 ## 📷 Preview (hasta ahora)
-![Vista previa uno]()
-![Vista previa dos]()
+![Vista previa uno](https://github.com/Abednego7/my_panda/blob/b45995036030da9fe80186e2770f2964fb2441dc/preview/preview.png)
+![Vista previa dos](https://github.com/Abednego7/my_panda/blob/b45995036030da9fe80186e2770f2964fb2441dc/preview/preview-two.png)
