@@ -46,3 +46,9 @@ Quise crear un proyecto que me permitiera seguir aprendiendo, enfrentándome a n
 ### Prerrequisitos  
 - Python 3.x instalado en tu máquina.  
 - Un entorno virtual para aislar las dependencias del proyecto.  
+
+---
+
+## 📷 Preview (hasta ahora)
+![Vista previa uno]()
+![Vista previa dos]()
