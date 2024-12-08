@@ -44,6 +44,7 @@
       </div>
     {% endif %}
 
+    <!-- Details -->
     <h2 class="text-center mt-5">Details 🔍:</h2>
     <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
       <p>
@@ -58,6 +59,29 @@
       </ol>
     </div>
 
+    <!-- Contains null data -->
+    {% if has_nulls %}
+      <h2 class="text-center mt-5">Contains null data 📌:</h2>
+      <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+        <p>
+          <strong>What do you want to do with null values?</strong>
+        </p>
+
+        <form action="/" method="post">
+          <div class="mb-3">
+            <select class="form-select" name="null_action" required>
+              <option value="" disabled selected>Select an option</option>
+              <option value="delete">Delete null data</option>
+              <option value="median">Replace with the median</option>
+              <option value="average">Replace with the average</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <!-- General statistics -->
     <h2 class="text-center mt-5">General statistics 📊:</h2>
     <p class="text-center">
       <strong>Numerical columns found:</strong>

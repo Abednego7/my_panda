@@ -33,6 +33,9 @@ class HomeView(View):
             columns = df.columns.tolist()
             values = df.values.tolist()
             counts = df.count().tolist()
+            has_nulls = df.isnull().values.any()  # Bool
+
+            print(has_nulls)
 
             # Describe
             general_statistics = df.describe().to_dict()
@@ -94,6 +97,7 @@ class HomeView(View):
                     "dataframe": data_frame_context,
                     "general_statistics": general_statistics.keys(),
                     "describe_info": describe_info,
+                    "has_nulls": has_nulls,
                 },
             )
 
