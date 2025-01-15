@@ -1,3 +1,4 @@
+from django.core.paginator import Paginator
 from django.http import HttpResponseBadRequest
 from django.shortcuts import render
 from django.views import View
@@ -18,8 +19,9 @@ class HomeView(View):
 
         if form.is_valid():
             name = request.POST["name"]
+            opt_null = request.POST["opt_null"]
             csv_file = request.FILES["file"]
-            print(f"persona: {name}\narchivo: {csv_file}")
+            print(f"persona: {name}\nopcion: {opt_null}\narchivo: {csv_file}")
 
             if not csv_file.name.endswith(".csv"):
                 return HttpResponseBadRequest("The file you uploaded is not a csv file")
@@ -29,6 +31,25 @@ class HomeView(View):
             except Exception as e:
                 return HttpResponseBadRequest(f"Error reading file: {e}")
 
+            # Isnull
+            match opt_null:
+                case "delete":
+                    df.dropna(inplace=True)
+                case "mean":
+                    for col in df.columns:
+                        if df[col].dtype in ["int64", "float64"]:
+                            df[col] = df[col].fillna(df[col].mean())
+                case "median":
+                    for col in df.columns:
+                        if df[col].dtype in ["int64", "float64"]:
+                            df[col] = df[col].fillna(df[col].median())
+                case "mode":
+                    for col in df.columns:
+                        if df[col].dtype in ["int64", "float64"]:
+                            df[col] = df[col].fillna(df[col].mode()[0])
+                case _:
+                    pass
+
             # Details
             columns = df.columns.tolist()
             values = df.values.tolist()
@@ -37,17 +58,22 @@ class HomeView(View):
 
             print(has_nulls)
 
-            # Describe
+            # Pagination
+            paginator = Paginator(values, 10)
+            page_number = request.GET.get("page")
+            page_obj = paginator.get_page(page_number)
+
+            # Describe (General statistics)
             general_statistics = df.describe().to_dict()
 
             count = []
             mean = []
             std = []
-            min = []
+            min_des = []
             percent_25 = []
             percent_50 = []
             percent_75 = []
-            max = []
+            max_des = []
 
             for x in general_statistics.values():
                 for k, v in x.items():
@@ -58,7 +84,7 @@ class HomeView(View):
                     elif k == "std":
                         std.append(v)
                     elif k == "min":
-                        min.append(v)
+                        min_des.append(v)
                     elif k == "25%":
                         percent_25.append(v)
                     elif k == "50%":
@@ -66,17 +92,17 @@ class HomeView(View):
                     elif k == "75%":
                         percent_75.append(v)
                     elif k == "max":
-                        max.append(v)
+                        max_des.append(v)
 
             describe_info = {
                 "count": count,
                 "mean": mean,
                 "std": std,
-                "min": min,
+                "min": min_des,
                 "25%": percent_25,
                 "50%": percent_50,
                 "75%": percent_75,
-                "max": max,
+                "max": max_des,
             }
 
             data_frame_info = {key: count for key, count in zip(columns, counts)}
@@ -95,6 +121,7 @@ class HomeView(View):
                     "form": form,
                     "name": name,
                     "dataframe": data_frame_context,
+                    "page_obj": page_obj,
                     "general_statistics": general_statistics.keys(),
                     "describe_info": describe_info,
                     "has_nulls": has_nulls,
