@@ -70,51 +70,85 @@
           {% endif %}
         </ul>
       </nav>
+
+      <!-- Details -->
+      <h2 class="text-center mt-5">Details 🔍:</h2>
+      <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+        <p>
+          <strong>Record Count:</strong>
+        </p>
+        <ol>
+          {% for key, count in dataframe.total_rows.items %}
+            <li>
+              {{ key }}: {{ count }} <strong>non-null</strong>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
     {% endif %}
 
-    <!-- Details -->
-    <h2 class="text-center mt-5">Details 🔍:</h2>
-    <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
-      <p>
-        <strong>Record Count:</strong>
-      </p>
-      <ol>
-        {% for key, count in dataframe.total_rows.items %}
-          <li>
-            {{ key }}: {{ count }} <strong>non-null</strong>
-          </li>
-        {% endfor %}
-      </ol>
-    </div>
-
     <!-- General statistics -->
-    <h2 class="text-center mt-5">General statistics 📊:</h2>
-    <p class="text-center">
-      <strong>Numerical columns found:</strong>
-    </p>
-    <div class="table-responsive mt-3">
-      <table class="table table-bordered mx-auto" style="max-width: 90%;">
-        <thead>
-          <tr>
-            <th>Operations</th>
-            {% for key in general_statistics %}
-              <th>{{ key }}</th>
-            {% endfor %}
-          </tr>
-        </thead>
-        <tbody>
-          {% for key, val in describe_info.items %}
+    {% if general_statistics %}
+      <h2 class="text-center mt-5">General statistics 📊:</h2>
+      <p class="text-center">
+        <strong>Numerical columns found:</strong>
+      </p>
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered mx-auto" style="max-width: 90%;">
+          <thead>
             <tr>
-              <td>
-                <strong>{{ key }}</strong>
-              </td>
-              {% for v in val %}
-                <td>{{ v }}</td>
+              <th>Operations</th>
+              {% for key in general_statistics %}
+                <th>{{ key }}</th>
               {% endfor %}
             </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {% for key, val in describe_info.items %}
+              <tr>
+                <td>
+                  <strong>{{ key }}</strong>
+                </td>
+                {% for v in val %}
+                  <td>{{ v }}</td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+
+    <!-- Graphs -->
+    {% if has_nulls %}
+      <h2 class="text-center mt-5">Graphics 📈:</h2>
+      <p class="text-center">
+        <strong>Null Value Chart:</strong>
+      </p>
+      <div class="d-flex justify-content-center mt-3 mb-5">
+        <!-- Main image -->
+        <img src="data:image/png;base64,{{ chart_null }}" alt="Null Value Chart" class="img-fluid border border-secondary rounded shadow" style="max-width: 80%; cursor: pointer;" data-bs-toggle="modal" data-bs-target="#chartModal" />
+      </div>
+
+      <!-- Bootstrap Modal -->
+      <div class="modal fade" id="chartModal" tabindex="-1" aria-labelledby="chartModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="chartModalLabel">Null Value Chart</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+              <!-- Image in the modal -->
+              <img src="data:image/png;base64,{{ chart_null }}" alt="Null Value Chart" class="img-fluid" />
+            </div>
+            <div class="modal-footer">
+              <a href="data:image/png;base64,{{ chart_null }}" download="Null_Value_Chart.png" class="btn btn-primary">Download Image</a>
+              <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}

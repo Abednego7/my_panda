@@ -4,8 +4,20 @@ from django.shortcuts import render
 from django.views import View
 from .forms import UploadFileForm
 
+# Others -> Graphs
+import base64
+from io import BytesIO
+
 # Pandas
 import pandas as pd
+
+# Seaborn
+import matplotlib
+
+matplotlib.use("Agg")
+
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 # Create your views here.
@@ -56,7 +68,7 @@ class HomeView(View):
             counts = df.count().tolist()
             has_nulls = df.isnull().values.any()  # Bool
 
-            print(has_nulls)
+            print(f"nulls ?: {has_nulls}")
 
             # Pagination
             paginator = Paginator(values, 10)
@@ -113,6 +125,21 @@ class HomeView(View):
                 "total_rows": data_frame_info,
             }
 
+            # Graphs
+            plt.figure(figsize=(10, 6))
+            sns.heatmap(df.isnull(), cbar=False, cmap="viridis", yticklabels=False)
+            plt.title("Representation of Null values")
+
+            # Save the graph to memory as an image
+            buffer = BytesIO()
+            plt.savefig(buffer, format="png")
+            buffer.seek(0)
+            plt.close()
+
+            # Encode the image in base64
+            image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+            buffer.close()
+
             # "form": form -> To load valid form after submitting it
             return render(
                 request,
@@ -125,6 +152,7 @@ class HomeView(View):
                     "general_statistics": general_statistics.keys(),
                     "describe_info": describe_info,
                     "has_nulls": has_nulls,
+                    "chart_null": image_base64,
                 },
             )
 
