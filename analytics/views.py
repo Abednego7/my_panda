@@ -32,100 +32,9 @@ class HomeView(View):
 
         if df_json:
             df = pd.read_json(StringIO(df_json))
+            context = self._prepare_context(df, name)
 
-            # Details
-            columns = df.columns.tolist()
-            values = df.values.tolist()
-            counts = df.count().tolist()
-            has_nulls = df.isnull().values.any()  # Bool
-
-            print(f"nulls ?: {has_nulls}")
-
-            # Pagination
-            paginator = Paginator(values, 10)
-            page_number = request.GET.get("page")
-            page_obj = paginator.get_page(page_number)
-
-            # Describe (General statistics)
-            general_statistics = df.describe().to_dict()
-
-            count = []
-            mean = []
-            std = []
-            min_des = []
-            percent_25 = []
-            percent_50 = []
-            percent_75 = []
-            max_des = []
-
-            for x in general_statistics.values():
-                for k, v in x.items():
-                    if k == "count":
-                        count.append(v)
-                    elif k == "mean":
-                        mean.append(v)
-                    elif k == "std":
-                        std.append(v)
-                    elif k == "min":
-                        min_des.append(v)
-                    elif k == "25%":
-                        percent_25.append(v)
-                    elif k == "50%":
-                        percent_50.append(v)
-                    elif k == "75%":
-                        percent_75.append(v)
-                    elif k == "max":
-                        max_des.append(v)
-
-            describe_info = {
-                "count": count,
-                "mean": mean,
-                "std": std,
-                "min": min_des,
-                "25%": percent_25,
-                "50%": percent_50,
-                "75%": percent_75,
-                "max": max_des,
-            }
-
-            data_frame_info = {key: count for key, count in zip(columns, counts)}
-
-            data_frame_context = {
-                "columns": columns,
-                "values": values,
-                "total_rows": data_frame_info,
-            }
-
-            # Graphs
-            plt.figure(figsize=(10, 6))
-            sns.heatmap(df.isnull(), cbar=False, cmap="viridis", yticklabels=False)
-            plt.title("Representation of Null values")
-
-            # Save the graph to memory as an image
-            buffer = BytesIO()
-            plt.savefig(buffer, format="png")
-            buffer.seek(0)
-            plt.close()
-
-            # Encode the image in base64
-            image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-            buffer.close()
-
-            # "form": form -> To load valid form after submitting it
-            return render(
-                request,
-                "analytics/home.html",
-                {
-                    "form": UploadFileForm(),
-                    "name": name,
-                    "dataframe": data_frame_context,
-                    "page_obj": page_obj,
-                    "general_statistics": general_statistics.keys(),
-                    "describe_info": describe_info,
-                    "has_nulls": has_nulls,
-                    "chart_null": image_base64,
-                },
-            )
+            return render(request, "analytics/home.html", context)
         else:
             return render(request, "analytics/home.html", {"form": UploadFileForm()})
 
@@ -146,122 +55,131 @@ class HomeView(View):
             except Exception as e:
                 return HttpResponseBadRequest(f"Error reading file: {e}")
 
-            # Isnull
-            match opt_null:
-                case "delete":
-                    df.dropna(inplace=True)
-                case "mean":
-                    for col in df.columns:
-                        if df[col].dtype in ["int64", "float64"]:
-                            df[col] = df[col].fillna(df[col].mean())
-                case "median":
-                    for col in df.columns:
-                        if df[col].dtype in ["int64", "float64"]:
-                            df[col] = df[col].fillna(df[col].median())
-                case "mode":
-                    for col in df.columns:
-                        if df[col].dtype in ["int64", "float64"]:
-                            df[col] = df[col].fillna(df[col].mode()[0])
-                case _:
-                    pass
+            # Handle null values
+            self._handle_null_values(df, opt_null)
 
             # Save the dataframe in SESSIONS
             request.session["name"] = name
             request.session["dataframe"] = df.to_json()
 
-            # Details
-            columns = df.columns.tolist()
-            values = df.values.tolist()
-            counts = df.count().tolist()
-            has_nulls = df.isnull().values.any()  # Bool
+            # Context
+            context = self._prepare_context(df, name)
 
-            print(f"nulls ?: {has_nulls}")
-
-            # Pagination
-            paginator = Paginator(values, 10)
-            page_number = request.GET.get("page")
-            page_obj = paginator.get_page(page_number)
-
-            # Describe (General statistics)
-            general_statistics = df.describe().to_dict()
-
-            count = []
-            mean = []
-            std = []
-            min_des = []
-            percent_25 = []
-            percent_50 = []
-            percent_75 = []
-            max_des = []
-
-            for x in general_statistics.values():
-                for k, v in x.items():
-                    if k == "count":
-                        count.append(v)
-                    elif k == "mean":
-                        mean.append(v)
-                    elif k == "std":
-                        std.append(v)
-                    elif k == "min":
-                        min_des.append(v)
-                    elif k == "25%":
-                        percent_25.append(v)
-                    elif k == "50%":
-                        percent_50.append(v)
-                    elif k == "75%":
-                        percent_75.append(v)
-                    elif k == "max":
-                        max_des.append(v)
-
-            describe_info = {
-                "count": count,
-                "mean": mean,
-                "std": std,
-                "min": min_des,
-                "25%": percent_25,
-                "50%": percent_50,
-                "75%": percent_75,
-                "max": max_des,
-            }
-
-            data_frame_info = {key: count for key, count in zip(columns, counts)}
-
-            data_frame_context = {
-                "columns": columns,
-                "values": values,
-                "total_rows": data_frame_info,
-            }
-
-            # Graphs
-            plt.figure(figsize=(10, 6))
-            sns.heatmap(df.isnull(), cbar=False, cmap="viridis", yticklabels=False)
-            plt.title("Representation of Null values")
-
-            # Save the graph to memory as an image
-            buffer = BytesIO()
-            plt.savefig(buffer, format="png")
-            buffer.seek(0)
-            plt.close()
-
-            # Encode the image in base64
-            image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-            buffer.close()
-
-            # "form": form -> To load valid form after submitting it
-            return render(
-                request,
-                "analytics/home.html",
-                {
-                    "form": form,
-                    "name": name,
-                    "dataframe": data_frame_context,
-                    "page_obj": page_obj,
-                    "general_statistics": general_statistics.keys(),
-                    "describe_info": describe_info,
-                    "has_nulls": has_nulls,
-                    "chart_null": image_base64,
-                },
-            )
+            return render(request, "analytics/home.html", context)
 
         # To reload invalid form
         return render(request, "analytics/home.html", {"form": form})
+
+    def _handle_null_values(self, df, opt_null):
+        match opt_null:
+            case "delete":
+                df.dropna(inplace=True)
+            case "mean":
+                for col in df.columns:
+                    if df[col].dtype in ["int64", "float64"]:
+                        df[col] = df[col].fillna(df[col].mean())
+            case "median":
+                for col in df.columns:
+                    if df[col].dtype in ["int64", "float64"]:
+                        df[col] = df[col].fillna(df[col].median())
+            case "mode":
+                for col in df.columns:
+                    if df[col].dtype in ["int64", "float64"]:
+                        df[col] = df[col].fillna(df[col].mode()[0])
+            case _:
+                pass
+
+    def _prepare_context(self, df, name):
+        columns = df.columns.tolist()
+        values = df.values.tolist()
+        counts = df.count().tolist()
+        has_nulls = df.isnull().values.any()  # Bool
+
+        print(f"nulls ?: {has_nulls}")
+
+        # Pagination
+        paginator = Paginator(values, 10)
+        page_number = self.request.GET.get("page")
+        page_obj = paginator.get_page(page_number)
+
+        # Describe (General statistics)
+        general_statistics = df.describe().to_dict()
+        describe_info = self._extract_describe_info(general_statistics)
+
+        data_frame_info = {key: count for key, count in zip(columns, counts)}
+
+        data_frame_context = {
+            "columns": columns,
+            "values": values,
+            "total_rows": data_frame_info,
+        }
+
+        chart_null = self._generate_heatmap(df)
+
+        return {
+            "form": UploadFileForm(),
+            "name": name,
+            "dataframe": data_frame_context,
+            "page_obj": page_obj,
+            "general_statistics": general_statistics.keys(),
+            "describe_info": describe_info,
+            "has_nulls": has_nulls,
+            "chart_null": chart_null,
+        }
+
+    def _extract_describe_info(self, general_statistics):
+        count = []
+        mean = []
+        std = []
+        min_des = []
+        percent_25 = []
+        percent_50 = []
+        percent_75 = []
+        max_des = []
+
+        for x in general_statistics.values():
+            for k, v in x.items():
+                if k == "count":
+                    count.append(v)
+                elif k == "mean":
+                    mean.append(v)
+                elif k == "std":
+                    std.append(v)
+                elif k == "min":
+                    min_des.append(v)
+                elif k == "25%":
+                    percent_25.append(v)
+                elif k == "50%":
+                    percent_50.append(v)
+                elif k == "75%":
+                    percent_75.append(v)
+                elif k == "max":
+                    max_des.append(v)
+
+        return {
+            "count": count,
+            "mean": mean,
+            "std": std,
+            "min": min_des,
+            "25%": percent_25,
+            "50%": percent_50,
+            "75%": percent_75,
+            "max": max_des,
+        }
+
+    def _generate_heatmap(self, df):
+        plt.figure(figsize=(10, 6))
+        sns.heatmap(df.isnull(), cbar=False, cmap="viridis", yticklabels=False)
+        plt.title("Representation of Null values")
+
+        # Save the graph to memory as an image
+        buffer = BytesIO()
+        plt.savefig(buffer, format="png")
+        buffer.seek(0)
+        plt.close()
+
+        # Encode the image in base64
+        image_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        buffer.close()
+
+        return image_base64
