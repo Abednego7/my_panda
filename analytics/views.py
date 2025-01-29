@@ -1,8 +1,9 @@
 from django.core.paginator import Paginator
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, HttpResponse
 from django.shortcuts import render
 from django.views import View
 from .forms import UploadFileForm
+from django.conf import settings
 
 # Others -> Graphs
 import base64
@@ -13,6 +14,9 @@ import pandas as pd
 
 # To work with files directly with json
 from io import StringIO
+
+# To work with the system
+from os import path, makedirs, remove
 
 # Seaborn
 import matplotlib
@@ -39,6 +43,11 @@ class HomeView(View):
             return render(request, "analytics/home.html", {"form": UploadFileForm()})
 
     def post(self, request):
+        # Check if the user is requesting the file download
+        if "download" in request.POST:
+            return self._download_file(request)
+
+        # If not, process the file upload
         form = UploadFileForm(request.POST, request.FILES)
 
         if form.is_valid():
@@ -58,16 +67,19 @@ class HomeView(View):
             # Handle null values
             self._handle_null_values(df, opt_null)
 
+            # Save the clean file
+            self._save_file(df)
+
             # Save the dataframe in SESSIONS
             request.session["name"] = name
             request.session["dataframe"] = df.to_json()
 
-            # Context
+            # Preparing the context
             context = self._prepare_context(df, name)
 
             return render(request, "analytics/home.html", context)
 
-        # To reload invalid form
+        # Reload the form if it is not valid
         return render(request, "analytics/home.html", {"form": form})
 
     def _handle_null_values(self, df, opt_null):
@@ -88,6 +100,38 @@ class HomeView(View):
                         df[col] = df[col].fillna(df[col].mode()[0])
             case _:
                 pass
+
+    def _save_file(self, df):
+        media_path = path.join(settings.MEDIA_ROOT, "clean_file.csv")
+
+        # Create the directory if it does not exist
+        makedirs(settings.MEDIA_ROOT, exist_ok=True)
+
+        df.to_csv(media_path, index=False)
+
+        return media_path
+
+    def _download_file(self, request):
+        file_path = path.join(settings.MEDIA_ROOT, "clean_file.csv")
+
+        if path.exists(file_path):
+            try:
+                with open(file_path, "rb") as fh:
+                    file_content = fh.read()
+
+                # Create an HTTP response with the file
+                response = HttpResponse(file_content, content_type="text/csv")
+                # Force download of file named "clean_file.csv"
+                response["Content-Disposition"] = "attachment; filename=clean_file.csv"
+
+                # os remove
+                response.close = lambda: remove(file_path)
+
+                return response
+            except Exception as e:
+                return HttpResponse(f"Error downloading file: {e}", status=500)
+        else:
+            HttpResponse("The file does not exist.", status=404)
 
     def _prepare_context(self, df, name):
         columns = df.columns.tolist()

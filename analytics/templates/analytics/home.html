@@ -150,5 +150,22 @@
         </div>
       </div>
     {% endif %}
+
+    {% if dataframe %}
+      <!-- Download -->
+      <h2 class="text-center mt-5">Download ⬇️:</h2>
+      <div class="card mx-auto my-5 p-4" style="max-width: 500px;">
+        <p>
+          <strong>You can download the file you have worked on here:</strong>
+        </p>
+        <form action="{% url 'home' %}" method="post">
+          {% csrf_token %}
+          <input type="hidden" name="download" value="true" />
+          <div class="text-center">
+            <button type="submit" class="btn btn-success">Download clean file</button>
+          </div>
+        </form>
+      </div>
+    {% endif %}
   </div>
 {% endblock %}
