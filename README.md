@@ -97,5 +97,7 @@ Si tienes alguna sugerencia o duda, no dudes en contactarme. ¡Estoy abierto a m
 ---
 
 ## 📷 Preview (hasta ahora)
-![Vista previa uno](https://github.com/Abednego7/my_panda/blob/b45995036030da9fe80186e2770f2964fb2441dc/preview/preview.png)
-![Vista previa dos](https://github.com/Abednego7/my_panda/blob/b45995036030da9fe80186e2770f2964fb2441dc/preview/preview-two.png)
+![Vista previa uno](https://github.com/Abednego7/my_panda/blob/765e08314bde68f9feaa7fec2b8ea605d4fd61f3/preview/preview.png)
+![Vista previa dos](https://github.com/Abednego7/my_panda/blob/765e08314bde68f9feaa7fec2b8ea605d4fd61f3/preview/preview-two.png)
+![Vista previa tres](https://github.com/Abednego7/my_panda/blob/765e08314bde68f9feaa7fec2b8ea605d4fd61f3/preview/preview-three.png)
+![Vista previa cuatro](https://github.com/Abednego7/my_panda/blob/765e08314bde68f9feaa7fec2b8ea605d4fd61f3/preview/preview-four.png)
