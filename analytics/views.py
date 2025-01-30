@@ -18,11 +18,11 @@ from io import StringIO
 # To work with the system
 from os import path, makedirs, remove
 
-# Seaborn
 import matplotlib
 
 matplotlib.use("Agg")
 
+# Seaborn
 import seaborn as sns
 import matplotlib.pyplot as plt
 
@@ -131,7 +131,7 @@ class HomeView(View):
             except Exception as e:
                 return HttpResponse(f"Error downloading file: {e}", status=500)
         else:
-            HttpResponse("The file does not exist.", status=404)
+            return HttpResponse("The file does not exist.", status=404)
 
     def _prepare_context(self, df, name):
         columns = df.columns.tolist()
